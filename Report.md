@@ -19,3 +19,11 @@ We can thus observe a slight increase, but for a more accurate assessment, we wo
 For the second monitored food item, milk, it was possible in 2006 to purchase 1,432 liters at a price of 14.44 CZK per liter.
 In 2018, the number of liters increased by 14.4% to 1,639 liters, at a price of 19.82 CZK.
 We can therefore see that the price of bread in relation to the average wage increased more than that of milk.
+
+----------------------------------------------------------------------------------------------------------
+
+# The smallest year-over-year increase in food prices
+
+The best result, meaning the smallest increase in average price compared to the previous year, was recorded for **plant-based spreadable fat**, where the average price barely changed and in 2009 was only **0.01%** higher.
+One of the largest year-over-year price increases was seen in **bell peppers**, where the price in 2007 was **94.82%** higher than the previous year.
+Throughout the years, some food items across all categories also experienced price decreases, meaning that certain goods became cheaper.
