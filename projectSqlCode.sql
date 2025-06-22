@@ -119,12 +119,69 @@ order by food_category;
 
 
 
+select * from t_adam_lizal_project_sql_primary_final talpspf ;
+
+----------------------------------------------------------------
+-- Which category of food is becoming more expensive at the slowest rate (i.e., has the lowest percentage year-over-year increase)?
+----------------------------------------------------------------
 
 
+with cte_base as (
+select
+	  extract(year from date_from) as year,
+	  food_category,
+	  round(avg(price_value::decimal),2) as avg_price,
+	  lag(round(avg(price_value::decimal),2))over(partition by food_category order by extract(year from date_from)) as prev_price,
+	  round(avg(price_value::decimal),2) - lag(round(avg(price_value::decimal),2))over(partition by food_category order by extract(year from date_from))as year_difference
+from t_adam_lizal_project_sql_primary_final 
+group by food_category, extract(year from date_from)
+ ),
+cte_diff as (
+select
+	 food_category,
+	 year,
+	 round((year_difference/prev_price)*100,2) as percentage_diff
+from cte_base
+where prev_price is not null and year_difference is not null
+and year_difference >=0 
+ ),
+ cte_rank as (
+ select 
+ 	  food_category,
+ 	  year,
+ 	  percentage_diff,
+ 	  row_number()over(order by percentage_diff asc) as r_min,
+ 	  row_number()over(order by percentage_diff desc) as r_max
+ from cte_diff
+ )
+ select 
+       food_category,
+       year,
+       percentage_diff,
+       'min' as result
+ from cte_rank
+ where r_min = 1
+ union all
+  select 
+       food_category,
+       year,
+       percentage_diff,
+       'max' as result
+ from cte_rank
+ where r_max = 1
+;
 
 
+-- lag(price_value)over(order by extract(year from date_from)) as one_day_before,
+	--  price_value - lag(price_value)over(order by extract(year from date_from)) as daily_change
 
-	 
 
-
-
+select
+	  extract(year from date_from) as year,
+	  food_category,
+	  round(avg(price_value::decimal),2) as avg_price,
+	  lag(round(avg(price_value::decimal),2))over(partition by food_category order by extract(year from date_from)) as prev_price,
+	  round(avg(price_value::decimal),2) - lag(round(avg(price_value::decimal),2))over(partition by food_category order by extract(year from date_from))as year_difference
+from t_adam_lizal_project_sql_primary_final
+group by food_category, extract(year from date_from)
+order by year_difference asc;
