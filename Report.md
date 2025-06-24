@@ -27,3 +27,11 @@ We can therefore see that the price of bread in relation to the average wage inc
 The best result, meaning the smallest increase in average price compared to the previous year, was recorded for **plant-based spreadable fat**, where the average price barely changed and in 2009 was only **0.01%** higher.
 One of the largest year-over-year price increases was seen in **bell peppers**, where the price in 2007 was **94.82%** higher than the previous year.
 Throughout the years, some food items across all categories also experienced price decreases, meaning that certain goods became cheaper.
+
+
+-----------------------------------------------------------------------------------------------------------
+
+# The food prices against wages
+
+During the analyzed period, there was no year in which food prices increased by more than 10% compared to the growth in average wages.
+The largest difference between the increase in food prices and average wage growth occurred in 2012 in the construction sector, where the year-over-year wage increase was only 0.33%, while food prices rose by 6.94%.
