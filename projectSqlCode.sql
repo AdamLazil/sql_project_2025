@@ -172,16 +172,53 @@ and year_difference >=0
 ;
 
 
--- lag(price_value)over(order by extract(year from date_from)) as one_day_before,
-	--  price_value - lag(price_value)over(order by extract(year from date_from)) as daily_change
+--------------------------------------
+-- Is there a year in which the year-over-year increase in food prices was significantly higher than the growth in wages (by more than 10%)?
+-------------------------------------
 
-
+with cte_main as (
+select 
+		tt.name_of_industry, 
+		round((difference/prev_year_avg_payroll)*100,2)as percentage_diff_payroll,
+		price.prev_price,
+		price.year_difference,
+		tt.year
+from test_table as tt
+inner join (
+		select
+			 name_of_industry,
+			 extract(year from date_from) as year,
+			 round(avg(price_value::decimal),2) as avg_price,
+	  		 lag(round(avg(price_value::decimal),2))over(partition by name_of_industry order by extract(year from date_from)) as prev_price,
+	         round(avg(price_value::decimal),2) - lag(round(avg(price_value::decimal),2))over(partition by name_of_industry order by extract(year from date_from))as year_difference
+	     from t_adam_lizal_project_sql_primary_final talpspf
+	     group by name_of_industry, extract(year from date_from)	 
+) as price on tt.name_of_industry = price.name_of_industry and tt.year = price.year
+),
+cte_main_filtered as(
+select 
+		 cte_main.year,
+		 name_of_industry,
+		 cte_main.percentage_diff_payroll,
+		 cte_main.prev_price,
+		 cte_main.year_difference,
+		 round((year_difference/prev_price)*100,2) as percentage_diff_price
+from cte_main
+where percentage_diff_payroll > 0 
+and percentage_diff_payroll is not null
+and round((year_difference/prev_price)*100,2) > 0
+AND prev_price IS NOT NULL
+AND year_difference IS NOT NULL
+)
 select
-	  extract(year from date_from) as year,
-	  food_category,
-	  round(avg(price_value::decimal),2) as avg_price,
-	  lag(round(avg(price_value::decimal),2))over(partition by food_category order by extract(year from date_from)) as prev_price,
-	  round(avg(price_value::decimal),2) - lag(round(avg(price_value::decimal),2))over(partition by food_category order by extract(year from date_from))as year_difference
-from t_adam_lizal_project_sql_primary_final
-group by food_category, extract(year from date_from)
-order by year_difference asc;
+	 year,
+	 name_of_industry,
+	 percentage_diff_payroll,
+	 percentage_diff_price,
+	 (percentage_diff_price - percentage_diff_payroll) as final_diff
+from cte_main_filtered
+order by (percentage_diff_price - percentage_diff_payroll) desc
+;
+
+
+
