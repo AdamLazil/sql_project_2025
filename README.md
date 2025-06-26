@@ -1,14 +1,12 @@
-# Project: Project from SQL
+# SQL project
 
 ## Description
-
 
 In the analytical department of your independent organization, which focuses on the standard of living of citizens, you have agreed to try to answer a few defined research questions addressing the **availability of basic foodstuffs to the general public**. Your colleagues have already identified the key questions they will attempt to answer and will provide this information to the press department. This department will present the results at an upcoming conference focused on this area.
 
 They need **you to prepare robust data materials** that will allow for a **comparison of food availability based on average incomes over a specific time period**.
 
 As supplementary material, also prepare a **table with GDP, the GINI coefficient**, and the population of other European countries for the same period, to serve as a primary comparison for the Czech Republic.
-
 
 ## Research questions
 
