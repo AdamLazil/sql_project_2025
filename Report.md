@@ -9,7 +9,6 @@ The **Health and Social Care sector** experienced the highest percentage growth 
 Other sectors with a significant increase in average wage of over 70% include **Cultural, Entertainment, and Recreational Activities** and the **Manufacturing Industry**.
 In the remaining sectors, average wage growth ranged between 40% and 60%.
 
-----------------------------------------------------------------------------------------------------------
 
 # The price of the analyzed food items does not grow faster than the average wage
 
@@ -20,7 +19,6 @@ For the second monitored food item, milk, it was possible in 2006 to purchase 1,
 In 2018, the number of liters increased by 14.4% to 1,639 liters, at a price of 19.82 CZK.
 We can therefore see that the price of bread in relation to the average wage increased more than that of milk.
 
-----------------------------------------------------------------------------------------------------------
 
 # The smallest year-over-year increase in food prices
 
@@ -29,9 +27,12 @@ One of the largest year-over-year price increases was seen in **bell peppers**, 
 Throughout the years, some food items across all categories also experienced price decreases, meaning that certain goods became cheaper.
 
 
------------------------------------------------------------------------------------------------------------
-
 # The food prices against wages
 
 During the analyzed period, there was no year in which food prices increased by more than 10% compared to the growth in average wages.
 The largest difference between the increase in food prices and average wage growth occurred in 2012 in the construction sector, where the year-over-year wage increase was only 0.33%, while food prices rose by 6.94%.
+
+# GDP correlation
+
+The results of the correlation analysis show that there is a moderate positive relationship between GDP growth and the development of wages and food prices.
+**Although it is not a direct linear relationship**, it can be said that GDP growth tends to be accompanied by increases in both wages and prices, which is in line with general macroeconomic expectations.

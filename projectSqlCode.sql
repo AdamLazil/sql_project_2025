@@ -18,7 +18,7 @@ select * from czechia_payroll_industry_branch cpib ;
 -- main table one
 ---------------------------
 
-create table t_Adam_Lizal_project_SQL_primary_final as (
+create table t_Adam_Lizal_project_SQL_primary_final; as (
 select 
 	  cp.value as price_value,
 	  cast(cp.date_from as date),
@@ -44,15 +44,36 @@ where cpay.value_type_code = 5958
 create index idx_primary_final on t_Adam_Lizal_project_SQL_primary_final(name_of_industry);
 create index idx_1_primary_final on t_Adam_Lizal_project_SQL_primary_final(payroll_value);
 create index idx_2_primary_final on t_Adam_Lizal_project_SQL_primary_final(date_from);
+create index idx_3_primary_final on t_Adam_Lizal_project_SQL_primary_final(date_to,year_primary);
+
+alter table t_adam_lizal_project_sql_primary_final 
+add column year_primary integer;
+
+update t_adam_lizal_project_sql_primary_final talpspf 
+set year_primary = extract(year from date_to);
+
+select * from t_adam_lizal_project_sql_primary_final talpspf ;
 
 -----------------
 --main table two
 -----------------
 
-select*from countries
-where continent = 'Europe';
+create table t_Adam_Lizal_project_SQL_secondary_final as (
+select
+	  e.year,
+	  c.country,
+	  e.population,
+	  e.gdp,
+	  e.gini
+from countries as c
+join economies as e
+on c.country = e.country
+where continent = 'Europe'
+and e.year between 2006 and 2018
+order by year, country
+);
 
-
+CREATE INDEX idx_secondary_year ON t_adam_lizal_project_sql_secondary_final (year);
 
 ---------------------------
 -- 1.Do wages increase across all sectors over the years, or do they decline in some?
@@ -60,13 +81,13 @@ where continent = 'Europe';
 create view test_table as
 select 
 	 name_of_industry,
-	 extract(year from date_from) as year,
+	 year_primary, --extract(year from date_from) as year,
 	 round(avg(payroll_value::decimal),2) as avg_payroll,
-	 lag(round(avg(payroll_value::decimal),2))over(partition by name_of_industry order by extract(year from date_from) ) as prev_year_avg_payroll,
-	 round(avg(payroll_value::decimal),2) - lag(round(avg(payroll_value::decimal),2))over(partition by name_of_industry order by extract(year from date_from) ) as difference
+	 lag(round(avg(payroll_value::decimal),2))over(partition by name_of_industry order by year_primary) as prev_year_avg_payroll,
+	 round(avg(payroll_value::decimal),2) - lag(round(avg(payroll_value::decimal),2))over(partition by name_of_industry order by year_primary) as difference
 from t_adam_lizal_project_sql_primary_final talpspf
-group by name_of_industry, extract(year from talpspf.date_from)
-order by name_of_industry, year 
+group by name_of_industry, year_primary
+order by name_of_industry, year_primary 
 ;
 
 select * from test_table tt ;
@@ -91,7 +112,7 @@ select * from test_table tt ;
 		        name_of_industry,
 		        avg_payroll AS avg_payroll_2018
 		    FROM test_table
-		    WHERE year = 2006
+		    WHERE year_primary = 2006
 		) AS y2018
 		    ON tt.name_of_industry = y2018.name_of_industry
 		GROUP BY tt.name_of_industry, y2018.avg_payroll_2018
@@ -107,19 +128,19 @@ select
 	 food_category,
 	 round(avg(price_value::decimal),2) as avg_price,
 	 round(avg(payroll_value::decimal),2) as avg_payroll,
-	 extract(year from date_from) as year,
+	 year_primary,
 	 round(round(avg(payroll_value::decimal),2)/round(avg(price_value::decimal),2)) as buy_power,
 	 row_number()over(order by food_category) as help_value
 from t_adam_lizal_project_sql_primary_final talpspf
 where extract(year from date_from) in (2006, 2018)
 and
 food_category in ('Chléb konzumní kmínový','Mléko polotučné pasterované' )
-group by year, food_category
+group by year_primary, food_category
 order by food_category;
 
 
 
-select * from t_adam_lizal_project_sql_primary_final talpspf ;
+select distinct year_primary from t_adam_lizal_project_sql_primary_final talpspf ;
 
 ----------------------------------------------------------------
 -- Which category of food is becoming more expensive at the slowest rate (i.e., has the lowest percentage year-over-year increase)?
@@ -220,5 +241,74 @@ from cte_main_filtered
 order by (percentage_diff_price - percentage_diff_payroll) desc
 ;
 
+------------------------------------------------
+-- 
+------------------------------------------------
 
+create view gdp_analysis as
+with pf_prepered as (
+select
+	year_primary,
+	price_value,
+	payroll_value
+from t_adam_lizal_project_sql_primary_final
+),
+sf_prepered as (
+select
+	sf.year,
+	sf.country,
+	round(avg(sf.gdp::decimal),2) as avg_gdp,
+	round(avg(sf.gini::decimal),2) as avg_gini,
+	round(avg(pf.price_value::decimal),2) as avg_price_value,
+	round(avg(pf.payroll_value::decimal),2) as avg_payroll
+from t_adam_lizal_project_sql_secondary_final as sf
+left join pf_prepered as pf on sf.year = pf.year_primary
+where country = 'Czech Republic'
+and sf.year between 2006 and 2018
+group by sf.year, sf.country
+order by sf.year
+),
+sf_filtered_gdp as (
+select
+	 sfg.year,
+	 avg_gdp,
+	 lag(avg_gdp)over(order by year) as prev_gdp,
+	 avg_gdp - lag(avg_gdp)over(order by year) as diff_gdp,
+	 avg_price_value,
+	 lag(avg_price_value)over(order by year) as prev_price_value,
+	 avg_price_value - lag(avg_price_value)over(order by year) as diff_price,
+	 avg_payroll,
+	 lag(avg_payroll)over(order by year) as prev_payroll,
+	 avg_payroll - lag(avg_payroll)over(order by year) as diff_payroll
+from sf_prepered as sfg
+),
+sf_filtered_diff as (
+select
+	 sfd.year,
+	 round((diff_gdp/prev_gdp)*100,2) as gdp_diff_perc,
+	 round((diff_price/prev_price_value)*100,2) as price_diff_perc,
+	 round((diff_payroll/prev_payroll)*100,2) as payroll_diff_perc 
+from sf_filtered_gdp as sfd
+)
+select * from sf_filtered_diff 
+;
 
+--------------------------------------------
+-- Only gdp growth
+--------------------------------------------
+
+select 
+	 gdp_diff_perc,
+	 price_diff_perc,
+	 payroll_diff_perc
+from gdp_analysis
+where gdp_diff_perc > 0 
+and gdp_diff_perc is not null;
+
+----------------------------------------
+-- correlation between gdp vs price and payroll
+----------------------------------------
+SELECT
+  corr(gdp_diff_perc, payroll_diff_perc) AS corr_gdp_vs_payroll,
+  corr(gdp_diff_perc, price_diff_perc) AS corr_gdp_vs_price
+FROM gdp_analysis;
