@@ -6,14 +6,6 @@
 --czechia_payroll_unit
 --czechia_payroll_calculation
 
-select * from czechia_price cp ;
-select * from czechia_price_category cpc ;
-select * from czechia_region cr ;
-
-select * from czechia_payroll;
-select * from czechia_payroll_calculation cpc ;
-select * from czechia_payroll_industry_branch cpib ;
-
 ---------------------------
 -- main table one
 ---------------------------
@@ -46,13 +38,7 @@ create index idx_1_primary_final on t_Adam_Lizal_project_SQL_primary_final(payro
 create index idx_2_primary_final on t_Adam_Lizal_project_SQL_primary_final(date_from);
 create index idx_3_primary_final on t_Adam_Lizal_project_SQL_primary_final(date_to,year_primary);
 
-alter table t_adam_lizal_project_sql_primary_final 
-add column year_primary integer;
 
-update t_adam_lizal_project_sql_primary_final talpspf 
-set year_primary = extract(year from date_to);
-
-select * from t_adam_lizal_project_sql_primary_final talpspf ;
 
 -----------------
 --main table two
@@ -103,19 +89,19 @@ select * from test_table tt ;
 		-- I would like to see difference percentage between payroll 2006 and 2018
 		--------------------
 		
-		SELECT
+		select
 		    tt.name_of_industry,
 		    round((SUM(tt.difference)*100 / y2018.avg_payroll_2018 ),2) as percentage_grow
-		FROM test_table tt
-		LEFT JOIN (
-		    SELECT
+		from test_table tt
+		left join (
+		    select
 		        name_of_industry,
 		        avg_payroll AS avg_payroll_2018
-		    FROM test_table
-		    WHERE year_primary = 2006
-		) AS y2018
-		    ON tt.name_of_industry = y2018.name_of_industry
-		GROUP BY tt.name_of_industry, y2018.avg_payroll_2018
+		    from test_table
+		    where year_primary = 2006
+		) as y2018
+		    on tt.name_of_industry = y2018.name_of_industry
+		group by tt.name_of_industry, y2018.avg_payroll_2018
 		;
 
 
@@ -143,7 +129,7 @@ order by food_category;
 select distinct year_primary from t_adam_lizal_project_sql_primary_final talpspf ;
 
 ----------------------------------------------------------------
--- Which category of food is becoming more expensive at the slowest rate (i.e., has the lowest percentage year-over-year increase)?
+-- 3. Which category of food is becoming more expensive at the slowest rate (i.e., has the lowest percentage year-over-year increase)?
 ----------------------------------------------------------------
 
 
@@ -194,7 +180,7 @@ and year_difference >=0
 
 
 --------------------------------------
--- Is there a year in which the year-over-year increase in food prices was significantly higher than the growth in wages (by more than 10%)?
+-- 4. Is there a year in which the year-over-year increase in food prices was significantly higher than the growth in wages (by more than 10%)?
 -------------------------------------
 
 with cte_main as (
@@ -203,7 +189,7 @@ select
 		round((difference/prev_year_avg_payroll)*100,2)as percentage_diff_payroll,
 		price.prev_price,
 		price.year_difference,
-		tt.year
+		tt.year_primary
 from test_table as tt
 inner join (
 		select
@@ -214,11 +200,11 @@ inner join (
 	         round(avg(price_value::decimal),2) - lag(round(avg(price_value::decimal),2))over(partition by name_of_industry order by extract(year from date_from))as year_difference
 	     from t_adam_lizal_project_sql_primary_final talpspf
 	     group by name_of_industry, extract(year from date_from)	 
-) as price on tt.name_of_industry = price.name_of_industry and tt.year = price.year
+) as price on tt.name_of_industry = price.name_of_industry and tt.year_primary = price.year
 ),
 cte_main_filtered as(
 select 
-		 cte_main.year,
+		 cte_main.year_primary,
 		 name_of_industry,
 		 cte_main.percentage_diff_payroll,
 		 cte_main.prev_price,
@@ -232,7 +218,7 @@ AND prev_price IS NOT NULL
 AND year_difference IS NOT NULL
 )
 select
-	 year,
+	 year_primary,
 	 name_of_industry,
 	 percentage_diff_payroll,
 	 percentage_diff_price,
@@ -242,7 +228,7 @@ order by (percentage_diff_price - percentage_diff_payroll) desc
 ;
 
 ------------------------------------------------
--- 
+-- 5. Does the level of GDP have an impact on changes in wages and food prices?
 ------------------------------------------------
 
 create view gdp_analysis as
@@ -293,22 +279,25 @@ from sf_filtered_gdp as sfd
 select * from sf_filtered_diff 
 ;
 
---------------------------------------------
--- Only gdp growth
---------------------------------------------
+select * from gdp_analysis;
 
-select 
-	 gdp_diff_perc,
-	 price_diff_perc,
-	 payroll_diff_perc
-from gdp_analysis
-where gdp_diff_perc > 0 
-and gdp_diff_perc is not null;
+		--------------------------------------------
+		-- Only gdp growth
+		--------------------------------------------
+		
+		select
+			 year,
+			 gdp_diff_perc,
+			 price_diff_perc,
+			 payroll_diff_perc
+		from gdp_analysis
+		where gdp_diff_perc > 0 
+		and gdp_diff_perc is not null;
 
-----------------------------------------
--- correlation between gdp vs price and payroll
-----------------------------------------
-SELECT
-  corr(gdp_diff_perc, payroll_diff_perc) AS corr_gdp_vs_payroll,
-  corr(gdp_diff_perc, price_diff_perc) AS corr_gdp_vs_price
-FROM gdp_analysis;
+		----------------------------------------
+		-- correlation between gdp vs price and payroll
+		----------------------------------------
+		SELECT
+		  corr(gdp_diff_perc, payroll_diff_perc) AS corr_gdp_vs_payroll,
+		  corr(gdp_diff_perc, price_diff_perc) AS corr_gdp_vs_price
+		FROM gdp_analysis;

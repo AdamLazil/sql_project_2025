@@ -34,5 +34,12 @@ The largest difference between the increase in food prices and average wage grow
 
 # GDP correlation
 
-The results of the correlation analysis show that there is a moderate positive relationship between GDP growth and the development of wages and food prices.
+Correlation indexes result
+|Index value|Name|
+|:----|:-------:|
+|0.43|GDP/Price|
+|0.49|GDP/Payroll|
+
+
+The results of the correlation analysis show that there is a moderate positive relationship between GDP growth and the development of wages and food prices. 
 **Although it is not a direct linear relationship**, it can be said that GDP growth tends to be accompanied by increases in both wages and prices, which is in line with general macroeconomic expectations.
